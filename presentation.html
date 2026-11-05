@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashcam AI - Road Risk Analysis System | BVM Engineering College</title>
+  <style>
+    :root {
+      --bg: #f8fafc;
+      --card-bg: #ffffff;
+      --card-border: #e2e8f0;
+      --accent-blue: #1d4ed8;
+      --accent-cyan: #0e7490;
+      --bvm-red: #b91c1c;
+      --text-main: #0f172a;
+      --text-body: #334155;
+      --text-muted: #64748b;
+      --safe-green: #10b981;
+      --warn-yellow: #d97706;
+      --danger-red: #dc2626;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      overflow: hidden;
+    }
+    header {
+      background: #ffffff;
+      border-bottom: 1px solid var(--card-border);
+      padding: 10px 28px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      z-index: 10;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    .bvm-logo-mini {
+      height: 38px;
+      width: auto;
+    }
+    .badge-pill {
+      background: rgba(29, 78, 216, 0.1);
+      color: var(--accent-blue);
+      border: 1px solid rgba(29, 78, 216, 0.3);
+      padding: 4px 10px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+    }
+    .title-text {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+    }
+    .controls {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    button {
+      background: #f1f5f9;
+      color: var(--text-main);
+      border: 1px solid var(--card-border);
+      padding: 7px 14px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 13px;
+      font-weight: 600;
+      transition: all 0.15s ease;
+    }
+    button:hover {
+      background: #e2e8f0;
+    }
+    button.primary {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      color: #ffffff;
+    }
+    button.primary:hover {
+      background: #1e40af;
+    }
+    .slide-counter {
+      font-family: ui-monospace, monospace;
+      font-size: 13px;
+      font-weight: 700;
+      color: var(--text-body);
+      min-width: 65px;
+      text-align: center;
+    }
+
+    main {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 30px;
+      position: relative;
+    }
+    .slide {
+      display: none;
+      width: 100%;
+      max-width: 1280px;
+      height: 100%;
+      max-height: 700px;
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      padding: 28px 36px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.08), 0 8px 10px -6px rgba(0, 0, 0, 0.04);
+      flex-direction: column;
+      animation: fadeIn 0.3s ease;
+      position: relative;
+      overflow: hidden;
+    }
+    .slide.active {
+      display: flex;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .slide::before {
+      content: "";
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 4px;
+      background: linear-gradient(90deg, var(--accent-blue), var(--accent-cyan));
+    }
+    .slide-header {
+      margin-bottom: 20px;
+    }
+    .slide-header h2 {
+      font-size: 26px;
+      font-weight: 700;
+      color: var(--text-main);
+      letter-spacing: -0.01em;
+    }
+    .slide-header p {
+      font-size: 14px;
+      color: var(--accent-blue);
+      font-weight: 600;
+      margin-top: 3px;
+    }
+
+    /* Split-Screen Layouts */
+    .split-layout {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1.35fr 1fr;
+      gap: 24px;
+      align-items: center;
+      overflow: hidden;
+    }
+    .split-layout.reverse {
+      grid-template-columns: 1fr 1.35fr;
+    }
+    .media-card {
+      width: 100%;
+      height: 100%;
+      background: #f1f5f9;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: inset 0 2px 4px rgba(0,0,0,0.02);
+    }
+    .media-card img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    .info-pane {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+      height: 100%;
+      justify-content: center;
+    }
+
+    /* Stat Chips */
+    .stat-chip {
+      background: #f8fafc;
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 12px 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .stat-chip.blue { border-left: 4px solid var(--accent-blue); }
+    .stat-chip.cyan { border-left: 4px solid var(--accent-cyan); }
+    .stat-chip.green { border-left: 4px solid var(--safe-green); }
+    .stat-chip.yellow { border-left: 4px solid var(--warn-yellow); }
+    .stat-chip.red { border-left: 4px solid var(--danger-red); }
+
+    .stat-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .stat-desc {
+      font-size: 13px;
+      color: var(--text-body);
+      line-height: 1.4;
+    }
+
+    /* Grid Layouts */
+    .grid-5 {
+      flex: 1;
+      display: grid;
+      grid-template-columns: repeat(5, 1fr);
+      gap: 16px;
+      align-items: stretch;
+    }
+    .grid-2 {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      align-items: stretch;
+    }
+    .grid-4 {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      grid-template-rows: 1fr 1fr;
+      gap: 18px;
+    }
+    .card {
+      background: #ffffff;
+      border: 1px solid var(--card-border);
+      border-radius: 12px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Speaker Notes Bar */
+    footer {
+      background: #ffffff;
+      border-top: 1px solid var(--card-border);
+      padding: 12px 30px;
+      font-size: 13px;
+      color: var(--text-muted);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .notes-tag {
+      background: #eff6ff;
+      color: var(--accent-blue);
+      border: 1px solid #bfdbfe;
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+    #speakerNote {
+      color: var(--text-body);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <div class="brand">
+      <img class="bvm-logo-mini" src="https://upload.wikimedia.org/wikipedia/en/2/2c/Birla_Vishvakarma_Mahavidyalaya_logo.png" onerror="this.src='bvm_logo.png'" alt="BVM Logo">
+      <span class="badge-pill">BVM Engineering College</span>
+      <span class="title-text">Dashcam AI: Road Risk & Object Detection System</span>
+    </div>
+    <div class="controls">
+      <button onclick="prevSlide()">◀ Prev</button>
+      <div class="slide-counter" id="slideCount">1 / 11</div>
+      <button class="primary" onclick="nextSlide()">Next ▶</button>
+      <button onclick="toggleFullscreen()">⛶ Fullscreen</button>
+    </div>
+  </header>
+
+  <main>
+
+    <!-- Slide 1: Cover Slide with BVM Logo & Credentials -->
+    <div class="slide active" data-note="Welcome the evaluators and audience. Present the Dashcam AI project developed at BVM Engineering College by Sujal Patel under mentor Dhruvin R. Kotak.">
+      <div class="split-layout">
+        <div class="info-pane">
+          <div style="display: flex; align-items: center; gap: 14px; margin-bottom: 6px;">
+            <img src="https://upload.wikimedia.org/wikipedia/en/2/2c/Birla_Vishvakarma_Mahavidyalaya_logo.png" onerror="this.src='bvm_logo.png'" style="height: 60px; width: auto;" alt="BVM Logo">
+            <div>
+              <div style="font-size: 13px; font-weight: 800; color: var(--bvm-red); letter-spacing: 0.03em;">BIRLA VISHVAKARMA MAHAVIDYALAYA</div>
+              <div style="font-size: 11px; color: var(--text-muted);">Engineering College • Dept of Information Technology</div>
+            </div>
+          </div>
+
+          <h1 style="font-size: 32px; font-weight: 800; color: var(--accent-blue); line-height: 1.15;">
+            Dashcamera AI
+          </h1>
+          <h2 style="font-size: 20px; font-weight: 700; color: var(--text-main); margin-top: -6px;">
+            Real-Time Object Detection & Road Risk Analysis System
+          </h2>
+          <p style="font-size: 13px; color: var(--text-muted);">A Monocular Computer Vision ADAS with Dynamic Proximity Beep Alerts</p>
+
+          <div style="background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 10px; padding: 14px; margin-top: 6px;">
+            <div style="font-size: 11px; font-weight: 700; color: var(--accent-blue); text-transform: uppercase;">Project Credentials</div>
+            <div style="margin-top: 6px; font-size: 14px; font-weight: 700; color: var(--text-main);">
+              Student: <span style="color: var(--accent-blue);">Sujal Patel</span> &nbsp;|&nbsp; ID: <strong>23IT401</strong>
+            </div>
+            <div style="margin-top: 4px; font-size: 14px; font-weight: 700; color: var(--bvm-red);">
+              Mentor / Guide: Prof. Dhruvin R. Kotak
+            </div>
+            <div style="font-size: 12px; color: var(--text-muted); margin-top: 2px;">Department of Information Technology, BVM</div>
+          </div>
+
+          <div class="stat-chip blue">
+            <div class="stat-title">Core Modules: YOLOv8 • ByteTrack • Monocular 3D Distance • Hough Lanes</div>
+          </div>
+        </div>
+
+        <div class="media-card">
+          <img src="file:///C:/Users/Shree_Ganesh99/.gemini/antigravity/brain/894dad48-f3ca-4547-a6a3-91ef0a1a0c77/dashcam_ai_hero_1791798311487.jpg" alt="Dashcam AI Hero">
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 2: Passive vs Active -->
+    <div class="slide" data-note="Contrast passive recording vs active collision warnings. Conventional dashcams offer only post-mortem forensic video; our system warns drivers actively before impact.">
+      <div class="slide-header">
+        <h2>From Passive Recording to Active Edge AI</h2>
+        <p>Why modern vehicles need proactive collision intelligence instead of silent video files</p>
+      </div>
+      <div class="grid-2">
+        <div class="card" style="border-top: 4px solid var(--danger-red);">
+          <h3 style="color: var(--danger-red); font-size: 18px; margin-bottom: 16px;">Conventional Dashcam (Passive)</h3>
+          <div class="info-pane">
+            <div class="stat-chip red">
+              <div class="stat-title">Pure Post-Crash Forensics</div>
+              <div class="stat-desc">Silently saves video to SD cards; zero warning before impact.</div>
+            </div>
+            <div class="stat-chip red">
+              <div class="stat-title">No Lane Keeping or Proximity</div>
+              <div class="stat-desc">Blind to fatigue, highway hypnosis, or sudden pedestrian crossings.</div>
+            </div>
+            <div class="stat-chip red">
+              <div class="stat-title">Expensive Upgrades</div>
+              <div class="stat-desc">OEM ADAS is locked into expensive vehicles and cannot be retrofitted easily.</div>
+            </div>
+          </div>
+        </div>
+
+        <div class="card" style="border-top: 4px solid var(--safe-green);">
+          <h3 style="color: var(--safe-green); font-size: 18px; margin-bottom: 16px;">Our Dashcam AI Solution (Active Safety)</h3>
+          <div class="info-pane">
+            <div class="stat-chip green">
+              <div class="stat-title">Real-Time Threat Warnings</div>
+              <div class="stat-desc">Identifies danger within milliseconds with visual alerts and acoustic beeps.</div>
+            </div>
+            <div class="stat-chip green">
+              <div class="stat-title">Monocular Depth Estimation</div>
+              <div class="stat-desc">Calculates metric distance with a single 2D camera lens without LiDAR.</div>
+            </div>
+            <div class="stat-chip green">
+              <div class="stat-title">Proximity-Adaptive Beeping</div>
+              <div class="stat-desc">Fast, strong beeps when obstacles are near; smoothly turns silent when safe.</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 3: Architecture -->
+    <div class="slide" data-note="Walk through the 5-stage modular pipeline: video ingestion, YOLOv8 detection, ByteTrack tracking, geometric depth/lane estimation, and HUD audio/visual rendering.">
+      <div class="slide-header">
+        <h2>End-to-End System Architecture</h2>
+        <p>5-stage modular perception pipeline executing synchronously on edge hardware</p>
+      </div>
+      <div class="grid-5">
+        <div class="card" style="border-top: 4px solid var(--accent-blue);">
+          <div class="stat-title" style="color: var(--accent-blue);">1. Ingestion</div>
+          <div class="stat-desc" style="margin-top: 10px;">Dashcam MP4 / AVI video file or camera stream input.</div>
+        </div>
+        <div class="card" style="border-top: 4px solid var(--accent-cyan);">
+          <div class="stat-title" style="color: var(--accent-cyan);">2. Detection</div>
+          <div class="stat-desc" style="margin-top: 10px;">YOLOv8 Nano inference identifying vehicles, cyclists, pedestrians, signs.</div>
+        </div>
+        <div class="card" style="border-top: 4px solid var(--safe-green);">
+          <div class="stat-title" style="color: var(--safe-green);">3. Tracking</div>
+          <div class="stat-desc" style="margin-top: 10px;">ByteTrack Kalman filter associating persistent IDs across frames.</div>
+        </div>
+        <div class="card" style="border-top: 4px solid var(--warn-yellow);">
+          <div class="stat-title" style="color: var(--warn-yellow);">4. Geometry</div>
+          <div class="stat-desc" style="margin-top: 10px;">Monocular distance math Z = (f * W) / w & Hough lane centering.</div>
+        </div>
+        <div class="card" style="border-top: 4px solid var(--danger-red);">
+          <div class="stat-title" style="color: var(--danger-red);">5. ADAS HUD</div>
+          <div class="stat-desc" style="margin-top: 10px;">Threat categorization (SAFE/CAUTION/DANGER) and audio beeper.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 4: YOLO + ByteTrack -->
+    <div class="slide" data-note="Explain YOLOv8 Nano lightweight detection coupled with ByteTrack to track vehicles across occlusions without ID switching.">
+      <div class="slide-header">
+        <h2>Multi-Object Detection & Tracking</h2>
+        <p>YOLOv8 Nano + ByteTrack Multi-Target Association</p>
+      </div>
+      <div class="split-layout reverse">
+        <div class="info-pane">
+          <div class="stat-chip blue">
+            <div class="stat-title">YOLOv8 Nano (3.2M Params)</div>
+            <div class="stat-desc">Ultra-fast bounding box regression with minimal edge memory footprint.</div>
+          </div>
+          <div class="stat-chip cyan">
+            <div class="stat-title">ByteTrack Re-Identification</div>
+            <div class="stat-desc">Retains track IDs across occlusions, turns, and brief camera blurs.</div>
+          </div>
+          <div class="stat-chip green">
+            <div class="stat-title">Ego Hood Rejection Filter</div>
+            <div class="stat-desc">Masks out bottom windshield area to eliminate false positives on vehicle hood.</div>
+          </div>
+        </div>
+        <div class="media-card">
+          <img src="file:///C:/Users/Shree_Ganesh99/.gemini/antigravity/brain/894dad48-f3ca-4547-a6a3-91ef0a1a0c77/yolo_bytetrack_demo_1791798343186.jpg" alt="Tracking Visual">
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 5: Lane Detection -->
+    <div class="slide" data-note="Detail the classical CV lane detection: trapezoidal region of interest, Canny gradient edges, and Hough line slope filtering.">
+      <div class="slide-header">
+        <h2>Lane Departure Warning (LDW)</h2>
+        <p>Canny edge extraction, Probabilistic Hough Lines, and driving corridor centering</p>
+      </div>
+      <div class="split-layout">
+        <div class="media-card">
+          <img src="file:///C:/Users/Shree_Ganesh99/.gemini/antigravity/brain/894dad48-f3ca-4547-a6a3-91ef0a1a0c77/lane_detection_visual_1791798365777.jpg" alt="Lane Visual">
+        </div>
+        <div class="info-pane">
+          <div class="stat-chip green">
+            <div class="stat-title">Dynamic Trapezoid ROI</div>
+            <div class="stat-desc">Focuses solely on the road surface, ignoring trees, signs, and sky.</div>
+          </div>
+          <div class="stat-chip blue">
+            <div class="stat-title">Slope-Intercept Splitting</div>
+            <div class="stat-desc">Separates left (negative slope) and right (positive slope) lane boundaries.</div>
+          </div>
+          <div class="stat-chip yellow">
+            <div class="stat-title">Lateral Centering Offset</div>
+            <div class="stat-desc">Alerts driver if car drifts >50 pixels off lane midpoint with rumble warning.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 6: Distance Math -->
+    <div class="slide" data-note="Walk through the pinhole camera formula. Explain how real-world vehicle widths provide metric depth from 2D pixel widths.">
+      <div class="slide-header">
+        <h2>Monocular Distance Estimation</h2>
+        <p>Pinhole camera geometry estimating depth without LiDAR or stereo rigs</p>
+      </div>
+      <div class="split-layout reverse">
+        <div class="info-pane">
+          <div class="stat-chip blue">
+            <div class="stat-title">Pinhole Camera Formula</div>
+            <div class="stat-desc"><strong>Distance Z = (focal_length &times; Real_Width) / bbox_pixel_width</strong></div>
+          </div>
+          <div class="stat-chip cyan">
+            <div class="stat-title">Class-Calibrated Dimensions</div>
+            <div class="stat-desc">Car: 1.80m • Bus: 2.60m • Truck: 2.50m • Pedestrian: 0.55m • Bike: 0.80m</div>
+          </div>
+          <div class="stat-chip green">
+            <div class="stat-title">Relative Velocity Calculation</div>
+            <div class="stat-desc">Computes closing speed (m/s) across a rolling 10-frame window.</div>
+          </div>
+        </div>
+        <div class="media-card">
+          <img src="file:///C:/Users/Shree_Ganesh99/.gemini/antigravity/brain/894dad48-f3ca-4547-a6a3-91ef0a1a0c77/monocular_distance_math_1791798388185.jpg" alt="Distance Math Visual">
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 7: Collision Threat Engine -->
+    <div class="slide" data-note="Explain the 3-zone collision matrix and Time-to-Collision (TTC) safety metrics.">
+      <div class="slide-header">
+        <h2>Dynamic Collision Risk & Time-to-Collision (TTC)</h2>
+        <p>Spatial threat categorization based on distance, closing speed, and driving trajectory</p>
+      </div>
+      <div class="split-layout">
+        <div class="media-card">
+          <img src="file:///C:/Users/Shree_Ganesh99/.gemini/antigravity/brain/894dad48-f3ca-4547-a6a3-91ef0a1a0c77/risk_zones_visual_1791798418268.jpg" alt="Risk Zones Visual">
+        </div>
+        <div class="info-pane">
+          <div class="stat-chip red">
+            <div class="stat-title">DANGER Zone (&lt; 6.0m or TTC &lt; 2.0s)</div>
+            <div class="stat-desc">Immediate forward collision hazard; urgent visual badge and fast beeps.</div>
+          </div>
+          <div class="stat-chip yellow">
+            <div class="stat-title">CAUTION Zone (6.0m - 12.0m or TTC &lt; 3.5s)</div>
+            <div class="stat-desc">Approaching vehicle; driver alert and slow rhythmic beeps.</div>
+          </div>
+          <div class="stat-chip green">
+            <div class="stat-title">SAFE Zone (&ge; 12.0m)</div>
+            <div class="stat-desc">Clear forward corridor; silent operation.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 8: HUD & Audio -->
+    <div class="slide" data-note="Highlight the non-blocking proximity-adaptive sound synthesizer and the clean telemetry HUD.">
+      <div class="slide-header">
+        <h2>Augmented Cockpit HUD & Adaptive Audio Alerts</h2>
+        <p>Distraction-free visual dashboard with frequency-adaptive acoustic warnings</p>
+      </div>
+      <div class="split-layout reverse">
+        <div class="info-pane">
+          <div class="stat-chip blue">
+            <div class="stat-title">Top KPI Telemetry Cards</div>
+            <div class="stat-desc">Displays Road Status, Pipeline FPS, Tracked Objects, and Lane Status.</div>
+          </div>
+          <div class="stat-chip red">
+            <div class="stat-title">Proximity-Adaptive Beeping</div>
+            <div class="stat-desc">Strong rapid beeps (2200 Hz) when near; slows and turns silent when clear.</div>
+          </div>
+          <div class="stat-chip green">
+            <div class="stat-title">Non-Blocking Daemon Threads</div>
+            <div class="stat-desc">Audio runs in separate threads without blocking or stuttering video replay.</div>
+          </div>
+        </div>
+        <div class="media-card">
+          <img src="file:///C:/Users/Shree_Ganesh99/.gemini/antigravity/brain/894dad48-f3ca-4547-a6a3-91ef0a1a0c77/hud_telemetry_ui_1791798448242.jpg" alt="HUD UI Visual">
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 9: Benchmarks -->
+    <div class="slide" data-note="Present real-world performance benchmarks across RTX GPUs, laptop CPUs, and edge SBC boards.">
+      <div class="slide-header">
+        <h2>Performance Benchmarks & Edge Deployment</h2>
+        <p>Empirical execution metrics across embedded platforms and workstations</p>
+      </div>
+      <div class="split-layout">
+        <div class="media-card">
+          <img src="file:///C:/Users/Shree_Ganesh99/.gemini/antigravity/brain/894dad48-f3ca-4547-a6a3-91ef0a1a0c77/edge_hardware_dashcam_1791798494160.jpg" alt="Edge Hardware Visual">
+        </div>
+        <div class="info-pane">
+          <div class="stat-chip green">
+            <div class="stat-title">NVIDIA RTX GPU: 60 - 85+ FPS</div>
+            <div class="stat-desc">Full HD real-time ADAS processing with zero frame drops.</div>
+          </div>
+          <div class="stat-chip blue">
+            <div class="stat-title">Laptop CPU (i7 / Ryzen 7): 12 - 18 FPS</div>
+            <div class="stat-desc">Smooth analysis on commodity laptops without dedicated GPUs.</div>
+          </div>
+          <div class="stat-chip cyan">
+            <div class="stat-title">Edge SBC (Jetson / Pi 5): 20 - 30 FPS</div>
+            <div class="stat-desc">Ultra-compact edge deployment with 320px input resolution.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 10: Future Roadmap -->
+    <div class="slide" data-note="Discuss future engineering milestones: learned lane segmentation, sign fine-tuning, and radar sensor fusion.">
+      <div class="slide-header">
+        <h2>Future Engineering Roadmap</h2>
+        <p>Next phases of development for automotive edge intelligence</p>
+      </div>
+      <div class="grid-4">
+        <div class="card" style="border-top: 4px solid var(--accent-blue);">
+          <div class="stat-title" style="color: var(--accent-blue);">Learned Lane Segmentation</div>
+          <div class="stat-desc" style="margin-top: 8px;">Replace Hough lines with lightweight U-Net for curved and unlit roads.</div>
+        </div>
+        <div class="card" style="border-top: 4px solid var(--accent-cyan);">
+          <div class="stat-title" style="color: var(--accent-cyan);">Sign & Signal Recognition</div>
+          <div class="stat-desc" style="margin-top: 8px;">Fine-tune YOLOv8 for Indian traffic signs, speed limits, and traffic lights.</div>
+        </div>
+        <div class="card" style="border-top: 4px solid var(--warn-yellow);">
+          <div class="stat-title" style="color: var(--warn-yellow);">Blackbox Incident Logging</div>
+          <div class="stat-desc" style="margin-top: 8px;">Trigger automated circular video recording during DANGER events.</div>
+        </div>
+        <div class="card" style="border-top: 4px solid var(--safe-green);">
+          <div class="stat-title" style="color: var(--safe-green);">Radar Sensor Fusion</div>
+          <div class="stat-desc" style="margin-top: 8px;">Fuse 24GHz/77GHz mmWave radar for zero-visibility fog and night rain.</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Slide 11: Thank You & Credentials -->
+    <div class="slide" data-note="Thank the faculty and panel members. Invite questions, critique, and discussion.">
+      <div style="flex: 1; display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 20px;">
+        <img src="https://upload.wikimedia.org/wikipedia/en/2/2c/Birla_Vishvakarma_Mahavidyalaya_logo.png" onerror="this.src='bvm_logo.png'" style="height: 90px; width: auto;" alt="BVM Logo">
+        
+        <h1 style="font-size: 46px; font-weight: 800; color: var(--accent-blue);">
+          THANK YOU!
+        </h1>
+        <p style="font-size: 18px; color: var(--text-muted); margin-top: -10px;">Questions & Discussion</p>
+
+        <div style="background: #f1f5f9; border: 1px solid var(--card-border); border-radius: 14px; padding: 24px 40px; max-width: 720px; width: 100%; text-align: left; margin-top: 10px;">
+          <div style="font-size: 16px; font-weight: 800; color: var(--text-main); margin-bottom: 14px; text-align: center; border-bottom: 1px solid var(--card-border); padding-bottom: 10px;">
+            Dashcam AI: Real-Time Object Detection & Road Risk Analysis System
+          </div>
+          
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: var(--accent-blue); text-transform: uppercase;">Presented By:</div>
+              <div style="font-size: 17px; font-weight: 800; color: var(--text-main); margin-top: 4px;">Sujal Patel</div>
+              <div style="font-size: 13px; color: var(--text-body); margin-top: 2px;">Student ID: <strong>23IT401</strong></div>
+              <div style="font-size: 12px; color: var(--text-muted);">B.Tech Information Technology</div>
+            </div>
+
+            <div>
+              <div style="font-size: 11px; font-weight: 700; color: var(--bvm-red); text-transform: uppercase;">Under the Mentorship of:</div>
+              <div style="font-size: 17px; font-weight: 800; color: var(--bvm-red); margin-top: 4px;">Prof. Dhruvin R. Kotak</div>
+              <div style="font-size: 12px; color: var(--text-muted); margin-top: 4px;">Department of Information Technology</div>
+              <div style="font-size: 12px; font-weight: 600; color: var(--text-body);">Birla Vishvakarma Mahavidyalaya</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <footer>
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <span class="notes-tag">Presenter Notes</span>
+      <span id="speakerNote">Welcome the audience...</span>
+    </div>
+    <div style="font-size: 12px; color: var(--text-muted);">
+      Press <kbd style="background: #e2e8f0; padding: 2px 5px; border-radius: 3px; font-weight: bold;">Space</kbd> or <kbd style="background: #e2e8f0; padding: 2px 5px; border-radius: 3px; font-weight: bold;">Arrow Keys</kbd> to navigate
+    </div>
+  </footer>
+
+  <script>
+    let currentSlide = 0;
+    const slides = document.querySelectorAll('.slide');
+    const totalSlides = slides.length;
+    const slideCountEl = document.getElementById('slideCount');
+    const noteEl = document.getElementById('speakerNote');
+
+    function updateSlide() {
+      slides.forEach((s, idx) => {
+        s.classList.toggle('active', idx === currentSlide);
+      });
+      slideCountEl.textContent = `${currentSlide + 1} / ${totalSlides}`;
+      noteEl.textContent = slides[currentSlide].getAttribute('data-note') || '';
+    }
+
+    function nextSlide() {
+      if (currentSlide < totalSlides - 1) {
+        currentSlide++;
+        updateSlide();
+      }
+    }
+
+    function prevSlide() {
+      if (currentSlide > 0) {
+        currentSlide--;
+        updateSlide();
+      }
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen();
+      } else {
+        if (document.exitFullscreen) {
+          document.exitFullscreen();
+        }
+      }
+    }
+
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') {
+        nextSlide();
+      } else if (e.key === 'ArrowLeft' || e.key === 'PageUp') {
+        prevSlide();
+      } else if (e.key === 'f' || e.key === 'F') {
+        toggleFullscreen();
+      }
+    });
+
+    updateSlide();
+  </script>
+</body>
+</html>
