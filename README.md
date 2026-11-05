@@ -11,7 +11,7 @@
 
 **An intelligent, monocular edge Advanced Driver Assistance System (ADAS) transforming commodity dashcams into active safety co-pilots.**
 
-[Key Features](#-key-features) • [Architecture](#-system-architecture) • [Mathematical Formulations](#-mathematical--vision-formulations) • [Installation](#-installation--setup) • [Usage](#-usage-guide) • [Hardware Benchmarks](#-hardware-benchmarks) • [Academic Credits](#-academic-credentials)
+[Key Features](#-key-features) • [Architecture](#-system-architecture) • [Mathematical Formulations](#-mathematical--vision-formulations) • [Installation](#-installation--setup) • [Usage](#-usage-guide) • [Hardware Benchmarks](#-hardware-benchmarks) • [Roadmap](#️-engineering-roadmap)
 
 </div>
 
@@ -177,8 +177,8 @@ dashcamera-ai/
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/dashcamera-ai.git
-cd dashcamera-ai
+git clone https://github.com/Sujal260625/DashCam-AI.git
+cd DashCam-AI
 ```
 
 ### 2. Create and Activate a Virtual Environment
@@ -294,19 +294,6 @@ Empirical performance metrics across various testing environments:
 - [ ] **Indian Traffic Sign Domain Tuning**: Fine-tune YOLOv8 on localized traffic sign taxonomies (speed limits, school zones, caution boards).
 - [ ] **Automated Blackbox Incident Recording**: Trigger encrypted rolling video buffer captures whenever a `DANGER` collision event occurs.
 - [ ] **Sensor Fusion**: Integrate low-cost 24GHz/77GHz mmWave radar modules for adverse weather (heavy rain, dense fog, night glare).
-
----
-
-## 🎓 Academic Credentials
-
-This project was developed at **Birla Vishvakarma Mahavidyalaya (BVM Engineering College)**:
-
-* **Student Developer:** **Sujal Patel**
-* **Student ID:** **23IT401**
-* **Degree:** B.Tech in Information Technology
-* **Project Mentor / Guide:** **Prof. Dhruvin R. Kotak**
-* **Department:** Department of Information Technology
-* **Institution:** Birla Vishvakarma Mahavidyalaya (An Autonomous Institution, Vallabh Vidyanagar, Gujarat, India)
 
 ---
 
